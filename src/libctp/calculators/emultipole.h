@@ -18,8 +18,8 @@ class EMultipole : public QMCalculator
 {
 public:
 
-    EMultipole();
-   ~EMultipole();
+    EMultipole(){};
+   ~EMultipole(){};
 
     void Initialize(QMTopology *top, Property *opt);
     void GetMPoles(string &xmlfile);

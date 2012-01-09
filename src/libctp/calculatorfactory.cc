@@ -40,9 +40,7 @@
 
 #include "calculators/rates.h"
 
-//#include "calculators/writexml.h"
-
-//#include "calculators/sqlitewriter.h"
+#include "calculators/emultipole.h"
 
 #ifdef WITH_VOTCA_KMCOLD        
     #include "calculators/contkmc.h"
