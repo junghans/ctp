@@ -39,12 +39,12 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/484457893/qmpair.o \
 	${OBJECTDIR}/_ext/238600121/ecorrelation.o \
 	${OBJECTDIR}/_ext/484457893/qmdatabase.o \
-	${OBJECTDIR}/_ext/1125080670/sandbox.o \
 	${OBJECTDIR}/_ext/484457893/version_nb.o \
 	${OBJECTDIR}/_ext/484457893/qmtopology.o \
 	${OBJECTDIR}/_ext/238600121/ecoulomb.o \
 	${OBJECTDIR}/_ext/484457893/statesaversqlite.o \
 	${OBJECTDIR}/_ext/484457893/qmnblist.o \
+	${OBJECTDIR}/_ext/238600121/sandbox.o \
 	${OBJECTDIR}/_ext/484457893/calculatorfactory.o \
 	${OBJECTDIR}/_ext/238600121/eoutersphere.o
 
@@ -105,11 +105,6 @@ ${OBJECTDIR}/_ext/484457893/qmdatabase.o: ../../src/libctp/qmdatabase.cc
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/484457893/qmdatabase.o ../../src/libctp/qmdatabase.cc
 
-${OBJECTDIR}/_ext/1125080670/sandbox.o: ../../../../include/votca/ctp/sandbox.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1125080670
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1125080670/sandbox.o ../../../../include/votca/ctp/sandbox.cc
-
 ${OBJECTDIR}/_ext/484457893/version_nb.o: ../../src/libctp/version_nb.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/484457893
 	${RM} $@.d
@@ -134,6 +129,11 @@ ${OBJECTDIR}/_ext/484457893/qmnblist.o: ../../src/libctp/qmnblist.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/484457893
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/484457893/qmnblist.o ../../src/libctp/qmnblist.cc
+
+${OBJECTDIR}/_ext/238600121/sandbox.o: ../../src/libctp/calculators/sandbox.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/238600121
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/238600121/sandbox.o ../../src/libctp/calculators/sandbox.cc
 
 ${OBJECTDIR}/_ext/484457893/calculatorfactory.o: ../../src/libctp/calculatorfactory.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/484457893

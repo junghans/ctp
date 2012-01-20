@@ -41,6 +41,7 @@
 #include "calculators/rates.h"
 
 #include "calculators/emultipole.h"
+#include "calculators/sandbox.h"
 
 #ifdef WITH_VOTCA_KMCOLD        
     #include "calculators/contkmc.h"
@@ -60,6 +61,7 @@ void CalculatorFactory::RegisterAll(void)
         Calculators().Register<Ehistogram>("ehistogram"); // site energy histogram
         Calculators().Register<Etinker>("etinker"); // input for the TINKER package (site energies)
         Calculators().Register<EMultipole>("emultipole"); // Electrostatic contribution to site energies with polarization included
+        Calculators().Register<Sandbox>("sandbox"); // If you get to read this and don't know what this means, sth went wrong. Ask Carl
         Calculators().Register<Neighborlist>("neighborlist"); // fragment-based neighbor list
         Calculators().Register<Oboltzmann>("oboltzmann"); // Boltzmann distribution of site energies
 

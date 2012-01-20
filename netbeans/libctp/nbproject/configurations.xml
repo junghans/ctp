@@ -2,7 +2,6 @@
 <configurationDescriptor version="69">
   <logicalFolder name="root" displayName="root" projectFiles="true">
     <logicalFolder name="f1" displayName="Calculators" projectFiles="true">
-      <itemPath>../../src/libctp/calculators/EMultipole.h</itemPath>
       <itemPath>../../src/libctp/calculators/contkmc.h</itemPath>
       <itemPath>../../src/libctp/calculators/ecorrelation.cc</itemPath>
       <itemPath>../../src/libctp/calculators/ecorrelation.h</itemPath>
@@ -11,9 +10,7 @@
       <itemPath>../../src/libctp/calculators/egaussian.cc</itemPath>
       <itemPath>../../src/libctp/calculators/egaussian.h</itemPath>
       <itemPath>../../src/libctp/calculators/ehistogram.h</itemPath>
-      <itemPath>../../../../include/votca/ctp/emultipole.cc</itemPath>
       <itemPath>../../src/libctp/calculators/emultipole.cc</itemPath>
-      <itemPath>../../../../include/votca/ctp/emultipole.h</itemPath>
       <itemPath>../../src/libctp/calculators/eoutersphere.cc</itemPath>
       <itemPath>../../src/libctp/calculators/eoutersphere.h</itemPath>
       <itemPath>../../src/libctp/calculators/etinker.h</itemPath>

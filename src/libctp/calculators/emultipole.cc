@@ -392,6 +392,7 @@ void EMultipole::ChargeMol(Molecule *mol, int state) {
                      mol->getName();                        //>>>
         mol->getBead(i)->setQ(_chrgs[key][state]);          //>>>
         //<<< atm->setQStat(state);
+
     }
 }
 
