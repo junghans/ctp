@@ -5,10 +5,10 @@
 #include <votca/tools/property.h>
 #include <votca/ctp/statesaversqlite.h>
 #include <votca/moo/units.h>
-#include <votca/ctp/atom.h>
-#include <votca/ctp/fragment.h>
-#include <votca/ctp/segment.h>
-#include <votca/ctp/segmenttype.h>
+// #include <votca/ctp/atom.h>
+// #include <votca/ctp/fragment.h>
+// #include <votca/ctp/segment.h>
+// #include <votca/ctp/segmenttype.h>
 
 using namespace votca::ctp;
 using namespace votca::tools;
@@ -22,7 +22,7 @@ class Md2QmEngine
 public:
 
     Md2QmEngine() { };
-   ~Md2QmEngine();
+   ~Md2QmEngine() { };
 
     /**
      * Load properties from --cg xmlfile
