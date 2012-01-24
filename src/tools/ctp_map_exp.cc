@@ -8,7 +8,8 @@
 #include <votca/csg/trajectorywriter.h>
 #include <votca/csg/trajectoryreader.h>
 #include <votca/csg/topologyreader.h>
- 
+#include "Md2QmEngine.h"
+
 using namespace std;
 using namespace votca::csg;
 using namespace votca::ctp;
@@ -36,6 +37,8 @@ protected:
     Topology       _mdtopol;
     Topology       _qmtopol;
 
+    Md2QmEngine    _md2qm;
+
 };
 
 namespace propt = boost::program_options;
@@ -52,8 +55,6 @@ void CtpMapExp::Initialize() {
                          "  Atomistic trajetory file ");
     AddProgramOptions() ("cg",  propt::value<string> (),
                          "  Coarse-Graining definitions ");
-    AddProgramOptions() ("segments,s", propt::value<string> (),
-                         "  Conjugated-segment definitions ");
     AddProgramOptions() ("file,f", propt::value<string> (),
                          "  SQLite state file ");
 }
@@ -62,7 +63,6 @@ bool CtpMapExp::EvaluateOptions() {
 
     CheckRequired("top", "Missing topology file");
     CheckRequired("cg", "Missing CG definition file");
-    CheckRequired("segments");
     CheckRequired("file");
 
     return 1;
@@ -140,7 +140,7 @@ void CtpMapExp::Run() {
 
         throw runtime_error("Time or frame number exceeds trajectory length");
     }
-    /*
+    
     MoleculeContainer::iterator mit;
     for (mit = _mdtopol.Molecules().begin();
          mit != _mdtopol.Molecules().end();
@@ -158,7 +158,7 @@ void CtpMapExp::Run() {
             cout << " | getPos   " << btm->getPos();
             cout << endl;
         }    
-    } */
+    } 
 }
 
 
