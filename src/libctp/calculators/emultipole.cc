@@ -56,7 +56,11 @@ void EMultipole::Initialize(QMTopology *top, Property *opt) {
         }
          if ( opt->exists(key+".scaling") ) {
             _scale1 = opt->get(key+".scaling").as< vector<double> >();
-            if (_scale1[0]) { _useScaling = true; }
+            if (0 < _scale1.size() && _scale1.size() < 4) {
+                _useScaling = true; }
+            else {
+                _useScaling = false;
+                cout << "WARNING: 1-N SCALING SWITCHED OFF" << endl; }
         }
 
     key = "options.emultipole.convparam";
@@ -82,6 +86,9 @@ void EMultipole::Initialize(QMTopology *top, Property *opt) {
     // Equip topology with charges
     this->EquipTop(top);
 
+    // Restate input data to screen
+    this->PrintInfo("Thole"); this->PrintInfo("MPoles");
+
 }
 
 /**
@@ -89,17 +96,24 @@ void EMultipole::Initialize(QMTopology *top, Property *opt) {
  * @param xmlfile
  */
 void EMultipole::GetMPoles(string &xmlfile) {
+     cout << "Import multipoles from " << xmlfile << endl;
 
      // TODO Replace rsdno with rsdname; also affects ::EquipTop
      // TODO and ::ChargeMol; teach topology about  residue names
 
      // map to store polarizability tensors
+     //     string -> atom identifier
+     //     matrix -> polarizability tensor
      map < string, matrix >           polTs;
      map < string, matrix >::iterator polit;
 
      // map to store charges [ anion, neutral, cation ]
+     //     string -> atom identifier
+     //     int    -> charge state (-1, 1, 1)
+     //     double -> charge
      map < string, map<int, double> >           chrgs;
      map < string, map<int, double> >::iterator chrgit;
+
 
      // state sfor which data is available;
      // neutral assumed as precondition
@@ -130,7 +144,7 @@ void EMultipole::GetMPoles(string &xmlfile) {
     load_property_from_xml( opt, xmlfile.c_str() );
 
     // Loop through molecules
-    list< Property * > mols = opt.Select("molecule");
+    list< Property * > mols = opt.Select("molecules.molecule");
     list< Property * >::iterator mit;
     for ( mit = mols.begin();
           mit != mols.end();
@@ -205,7 +219,7 @@ void EMultipole::GetMPoles(string &xmlfile) {
                       matrix polT = matrix( vec(polV[0], polV[3], polV[6]),
                                             vec(polV[1], polV[4], polV[7]),
                                             vec(polV[2], polV[5], polV[8]) );
-
+                      
                       // Add data to tensor and charge maps
                       polTs[ namekey ] = polT;
                       chrgs[ namekey ] = chrg;
@@ -218,7 +232,7 @@ void EMultipole::GetMPoles(string &xmlfile) {
           if (anion)  { cout <<  " negative"; }
                         cout << ", neutral";
           if (cation) { cout << ", positive"; }
-          cout << "state. " << endl;
+          cout << " state. " << endl;
 
     } /* exit loop over molecules */
 
@@ -229,9 +243,14 @@ void EMultipole::GetMPoles(string &xmlfile) {
          throw std::runtime_error("Check " + xmlfile + ".");
     }
 
-    cout << endl << "Found multipole data for "
-         << polTs.size() << "atom types." << endl;
+    cout << "Found multipole data for "
+         << polTs.size() << " atom types." << endl;
 
+    // TODO Move out to atom class
+    _polTs  = polTs;
+    _polit  = _polTs.begin();
+    _chrgs  = chrgs;
+    _chrgit = _chrgs.begin();
 }
 
 /**
@@ -240,7 +259,8 @@ void EMultipole::GetMPoles(string &xmlfile) {
  * @return
  */
 void EMultipole::EquipTop(QMTopology *top) {
-
+    cout << "EMultipole::EquipTop *** RETURN ***" << endl;
+    return;
     // NOTE Starting here, substitute <Molecule>
     // NOTE with QMCrgunit
     // NOTE top->CrgUnits() instead of top->Molecules()
@@ -271,7 +291,8 @@ void EMultipole::EquipTop(QMTopology *top) {
  * @return
  */
 bool EMultipole::EvaluateFrame(QMTopology *top) {
-
+    cout << "EMultipole::EvalFrame *** RETURN ***" << endl;
+    return 0;
     // Site energies are attributes of charge units (= segments);
     // hence, first charge each segment appropriately,
     // then compute energy of that configuration
@@ -280,10 +301,10 @@ bool EMultipole::EvaluateFrame(QMTopology *top) {
     // Set electrostatic prefactor: All energies calculated via multipole
     // interaction tensors have to be multiplied by this factor => yields
     // energy in eV.
-    //       m        10⁹   nm
-    //    J --- = eV ----- ----
-    //       C²        e    C²
-    double _r4PiEps0 = 1/(1.602176487e-19)*1.000e9*1/(4*M_PI*8.854187817e-12);
+    //       m           10⁹   nm
+    //    J --- e² = eV ----- ---- e²
+    //       C²           e    C²
+    double _r4PiEps0 = 1.602176487e-19 * 1.000e9 * 1/(4*M_PI*8.854187817e-12);
 
     // If polarizabilites are given in A°**3, this already includes 1/ 4PiEps0;
     // Hence multiply all energies calculated via multipole interaction tensors
@@ -595,7 +616,55 @@ void EMultipole::CalcIntEnergy(QMTopology *top, int &state) {
     } /* exit loop over atom a */
 }
 
+/**
+  * \brief Print info to screen
+  */
 
+void EMultipole::PrintInfo(const string &key) {
+
+  if (key == "Thole") {
+
+    cout << endl;
+    cout << "Thole Model Parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ " << endl;
+    cout << "Use cutoff?        " << _useCutoff << endl;
+    if (_useCutoff) {
+        cout << "Cutoff [nm]        " << _cutoff << endl;
+    }
+    cout << "Use exp. damping?  " << _useExp << endl;
+    if (_useExp) {
+        cout << "Exp. damp. factor  " << _aDamp << endl;
+    }
+    cout << "Use 1-n scaling?   " << _useScaling << endl;
+    if (_useScaling) {
+        cout << "1-n scaling        ";
+        for (int i = 2; i < 5; i++) {
+            cout << "1-" << i << ": " << _scale1[i-2] << " | "; }
+        cout << endl;
+    }
+    cout << "Convergence Loop Parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~ " << endl;
+    cout << "Omega SOR          " << _omegSOR << endl;
+    cout << "Tolerance          " << _epsTol << endl;
+    cout << "Max. iteration     " << _maxIter << endl << endl;
+    
+  }
+
+  else if (key == "MPoles") {
+    cout << "Charges ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ " << endl;
+    for ( _chrgit = _chrgs.begin(); _chrgit != _chrgs.end(); _chrgit++ ) {
+          cout << _chrgit->first << " ";
+          map <int, double> tmp = _chrgit->second;
+          cout << " -1:" << tmp[-1];
+          cout <<  " | 0:" << tmp[0];
+          cout << " | +1:" << tmp[1] << endl;
+    }
+    cout << "Polarizability Tensors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ " << endl;
+    for ( _polit = _polTs.begin(); _polit != _polTs.end(); _polit ++ ) {
+          cout << _polit->first << endl;
+          cout << _polit->second;
+    }
+    cout << endl;
+  }
+}
 
 }} /* exit namespaces votca, ctp */
 

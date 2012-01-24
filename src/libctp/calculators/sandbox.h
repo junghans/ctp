@@ -16,6 +16,8 @@ public:
 
 private:
     int     _ID;
+    double  _p1;
+    double  _p2;
 
 };
 

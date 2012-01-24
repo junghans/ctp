@@ -33,6 +33,7 @@ public:
     void CalcIntEnergy(QMTopology *top, int &state);
     double PairIntEnergy(Bead *atm, Bead *btm);
 
+    void PrintInfo(const string &key);
 
 
 
@@ -58,8 +59,8 @@ private:
     // TODO of map structure and increase look-up speed
     map < string, matrix >           _polTs;
     map < string, matrix >::iterator _polit;
-    map < string, vector<double> >           _chrgs;
-    map < string, vector<double> >::iterator _chrgit;
+    map < string, map<int, double> >           _chrgs;
+    map < string, map<int, double> >::iterator _chrgit;
 
     // occupations for which to calculate site energies;
     // neutral assumed as precondition
@@ -115,9 +116,7 @@ private:
 
 };
 
-
 }} /* exit namespaces votca, ctp */
-
 
 
 #endif /* EMULTIPOLE_H */

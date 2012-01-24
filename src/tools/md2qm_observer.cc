@@ -37,6 +37,34 @@ void MD2QMObserver::Initialize(QMTopology &qmtop, Property &opts)
 
 void MD2QMObserver::BeginCG(Topology *top, Topology *top_atom)
 {
+            // temp >>>
+            BeadContainer::iterator bit;
+            for ( bit = top->Atoms().begin();
+                  bit != top->Atoms().end();
+                  bit++ ) {
+                Bead *btm = *bit;
+                cout << "MD2QM getId      " << btm->getId();
+                cout << " | getName    " << btm->getName();
+                cout << " | getMol     " << btm->getMolecule()->getId();
+                cout << " | Mol::getName    " << btm->getMolecule()->getName();
+                cout << " | getResnr   " << btm->getResnr();
+                cout << " | getType    " << btm->getType()->getName();
+                cout << btm->getPos();
+                cout << endl;
+            } 
+            for ( bit = top->Beads().begin();
+                  bit != top->Beads().end();
+                  bit++ ) {
+                Bead *btm = *bit;
+                cout << "MD2QM getId      " << btm->getId();
+                cout << " | getParents    ";
+                for ( int i = 0; i < btm->ParentBeads().size(); i++ ) {
+                    cout << btm->ParentBeads()[i] << " ";
+                }
+                
+            }
+            // <<< temp 
+
     _qmtop->Initialize(*top);
 }
 
