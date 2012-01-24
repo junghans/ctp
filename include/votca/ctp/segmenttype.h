@@ -21,6 +21,9 @@
 #include <string>
 #include <votca/ctp/segment.h>
 #include <votca/tools/matrix.h>
+#include <votca/moo/mol_and_orb.h>
+
+
 
 namespace votca { namespace ctp {
 
@@ -62,6 +65,10 @@ private:
     /// List of rotation matrices to put the internal coordinates of each 
     /// monomer onto the reference state
     vector < matrix > _list_ors_monomer;
+
+
+    // Carl: Added this due to lots of errors...
+    mol_and_orb _intcoords;
 
     /// this willA take each bead and move it to positions[i] rotating by the
     /// orientation corresponding to norm and rotate we assume that the pointer

@@ -120,7 +120,7 @@ SegmentType::SegmentType(const char * namecoord, const char * nameorb,
             matrix::eigensystem_t es;
             m.SolveEigensystem(es);
             zprime = es.eigenvecs[0];
-
+ 
 
             xprime = _intcoords.GetPos((list_atoms_monomer[count])[1]) - _intcoords.GetPos((list_atoms_monomer[count])[0]);
             xprime.normalize(); //these 2 lines useless
