@@ -51,7 +51,7 @@ Md2QmEngine::~Md2QmEngine() {
 }
 */
 
-Md2QmEngine::Initialize(const string &xmlfile) {
+void Md2QmEngine::Initialize(const string &xmlfile) {
 
     cout << "Md2QmEngine::Initialize ..." << endl;
 
