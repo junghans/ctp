@@ -12,8 +12,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>../../src/tools/ctp_app.cc</itemPath>
-      <itemPath>../../src/libctp/toolfactory.cc</itemPath>
+      <itemPath>../../src/tools/ctp_diode.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
