@@ -53,7 +53,6 @@
         <itemPath>../../src/libctp/calculators/xmultipole2.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Tools" projectFiles="true">
-        <itemPath>../../src/libctp/tools/configReader.h</itemPath>
         <itemPath>../../src/libctp/tools/coupling.h</itemPath>
         <itemPath>../../src/libctp/tools/exciton.h</itemPath>
         <itemPath>../../src/libctp/tools/log2mps.h</itemPath>
@@ -62,6 +61,14 @@
         <itemPath>../../src/libctp/tools/pdb2map.h</itemPath>
         <itemPath>../../src/libctp/tools/pdb2top.h</itemPath>
         <itemPath>../../src/libctp/tools/qmanalyze.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f6" displayName="trajIO" projectFiles="true">
+        <itemPath>../../src/libctp/trajio/gro.h</itemPath>
+        <itemPath>../../src/libctp/trajio/pdb.h</itemPath>
+        <itemPath>../../include/votca/ctp/trajio.h</itemPath>
+        <itemPath>../../src/libctp/trajiofactory.cc</itemPath>
+        <itemPath>../../include/votca/ctp/trajiofactory.h</itemPath>
+        <itemPath>../../src/libctp/trajio/xyz.h</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="HeaderFiles"
@@ -380,6 +387,13 @@
             flavor2="0">
       </item>
       <item path="../../include/votca/ctp/topology.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../include/votca/ctp/trajio.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../include/votca/ctp/trajiofactory.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../include/votca/ctp/version.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -758,11 +772,6 @@
       </item>
       <item path="../../src/libctp/toolfactory.cc" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="../../src/libctp/tools/configReader.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../src/libctp/tools/coupling.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../src/libctp/tools/exciton.h" ex="false" tool="3" flavor2="0">
@@ -780,6 +789,14 @@
       <item path="../../src/libctp/tools/qmanalyze.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../src/libctp/topology.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../src/libctp/trajio/gro.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../src/libctp/trajio/pdb.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../src/libctp/trajio/xyz.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../src/libctp/trajiofactory.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../src/libctp/version.cc" ex="false" tool="1" flavor2="0">
       </item>
@@ -980,6 +997,13 @@
             flavor2="0">
       </item>
       <item path="../../include/votca/ctp/topology.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../include/votca/ctp/trajio.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../include/votca/ctp/trajiofactory.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../include/votca/ctp/version.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -1358,11 +1382,6 @@
       </item>
       <item path="../../src/libctp/toolfactory.cc" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="../../src/libctp/tools/configReader.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../src/libctp/tools/coupling.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../src/libctp/tools/exciton.h" ex="false" tool="3" flavor2="0">
@@ -1380,6 +1399,14 @@
       <item path="../../src/libctp/tools/qmanalyze.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../src/libctp/topology.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../src/libctp/trajio/gro.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../src/libctp/trajio/pdb.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../src/libctp/trajio/xyz.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../src/libctp/trajiofactory.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../src/libctp/version.cc" ex="false" tool="1" flavor2="0">
       </item>
