@@ -211,6 +211,23 @@ void PDB2Map::adaptQM2MD()
 } /* END adaptQM2MD */
 
 void PDB2Map::topMdQm2xml()
+            if ( (!_has_xyz && !warning_showed) || _line.size()<78 ){
+            if ( (!_has_xyz && !warning_showed) || _line.size()<78 ){
+            if ( (!_has_xyz && !warning_showed) || _line.size()<78 ){
+            if ( (!_has_xyz && !warning_showed) || _line.size()<78 ){
+               cout << endl << "... ... WARNING: No chemical elements in PDB!\n"
+                            << "... ... Expect: empty slots \n"
+                            << "in <qmatoms> and <multipoles>, "
+                               "zeros in <weights>.\n"
+                            << "... ... To add chemical symbols use: "
+                               "editconf (GROMACS), babel, "
+                               "(hands+pdb format)";                   
+               warning_showed = true;
+            }
+            std::cout << "The size of str is " << _line.size() << " bytes.\n";
+            std::cout << "The size of str is " << _line.size() << " bytes.\n";
+            std::cout << "The size of str is " << _line.size() << " bytes.\n";
+            std::cout << "The size of str is " << _line.size() << " bytes.\n";
 {
     cout << endl << "... ... (A)merging XML from MD and QM topologies.";
 

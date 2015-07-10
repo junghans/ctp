@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/1559596494/aocoulomb.o \
 	${OBJECTDIR}/_ext/1559596494/aomatrix.o \
 	${OBJECTDIR}/_ext/1559596494/aooverlap.o \
 	${OBJECTDIR}/_ext/484457893/aomatrix.o \
@@ -50,6 +51,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/484457893/job.o \
 	${OBJECTDIR}/_ext/484457893/jobapplication.o \
 	${OBJECTDIR}/_ext/484457893/jobcalculatorfactory.o \
+	${OBJECTDIR}/_ext/700762242/dma.o \
 	${OBJECTDIR}/_ext/700762242/gwbse.o \
 	${OBJECTDIR}/_ext/700762242/idft.o \
 	${OBJECTDIR}/_ext/1069846742/mbgft.o \
@@ -118,6 +120,11 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/liblibctp.a: ${OBJECTFILES}
 	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/liblibctp.a
 	${AR} -rv ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/liblibctp.a ${OBJECTFILES} 
 	$(RANLIB) ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/liblibctp.a
+
+${OBJECTDIR}/_ext/1559596494/aocoulomb.o: nbproject/Makefile-${CND_CONF}.mk ../../src/libctp/aomatrices/aocoulomb.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1559596494
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1559596494/aocoulomb.o ../../src/libctp/aomatrices/aocoulomb.cc
 
 ${OBJECTDIR}/_ext/1559596494/aomatrix.o: nbproject/Makefile-${CND_CONF}.mk ../../src/libctp/aomatrices/aomatrix.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1559596494
@@ -193,6 +200,11 @@ ${OBJECTDIR}/_ext/484457893/jobcalculatorfactory.o: nbproject/Makefile-${CND_CON
 	${MKDIR} -p ${OBJECTDIR}/_ext/484457893
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/484457893/jobcalculatorfactory.o ../../src/libctp/jobcalculatorfactory.cc
+
+${OBJECTDIR}/_ext/700762242/dma.o: nbproject/Makefile-${CND_CONF}.mk ../../src/libctp/jobcalculators/dma.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/700762242
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/700762242/dma.o ../../src/libctp/jobcalculators/dma.cc
 
 ${OBJECTDIR}/_ext/700762242/gwbse.o: nbproject/Makefile-${CND_CONF}.mk ../../src/libctp/jobcalculators/gwbse.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/700762242
