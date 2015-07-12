@@ -52,18 +52,22 @@ public:
 
 private:
     
-    void generic_cutoff_seg_based_pair_list_in_direction(Topology *top);
-    
     map< string, map<string,double> > _cutoffs;
     bool                              _useConstantCutoff;
     double                            _constantCutoff;
     string                            _generate_from;
     bool                              _generate_from_file;
     bool                              _generate_unsafe;
+    
+    // consts used by generic_cutoff_seg_based_pair_list_in_direction
     bool                              _do_molecular_cutoff;
     double                            _molecular_cutoff;
     double                            _directional_cutoff;
     vec                               _direction;
+    // NOTE: uses string-to-vec constructor! 
+    // New feature in tools::vec
+    void generic_cutoff_seg_based_pair_list_in_direction(Topology *top);
+        
     std::list<QMNBList::SuperExchangeType*>        _superexchange;
 
 };
@@ -368,7 +372,6 @@ void Neighborlist::generic_cutoff_seg_based_pair_list_in_direction(Topology *top
 {
     vec n = _direction.normalize(); // uniform filter
     
-    bool stopLoop = false;
     int counter(0), counter_match(0);
     vec r1,r2,dr;
     double drn;
@@ -376,25 +379,24 @@ void Neighborlist::generic_cutoff_seg_based_pair_list_in_direction(Topology *top
     vector< Segment* > ::iterator seg_it1, seg_it2;
     for (seg_it1 = top->Segments().begin();
             seg_it1 < top->Segments().end();
-            seg_it1 ++) {
+          ++seg_it1 ) {
 
         for (seg_it2 = seg_it1 + 1; // upper triangular search
                 seg_it2 < top->Segments().end();
-                seg_it2++) {
+              ++seg_it2 ) {
 
             // counter++; // total num of iterations
             r1 = (*seg_it1)->getPos();
             r2 = (*seg_it2)->getPos();
             
             dr = top->PbShortestConnect(r1, r2); // shortest via pbc
-            drn = dr*n;
+            drn = dr*n; // projection on direction
             
-            if(      dr*dr < pow(_molecular_cutoff,2) && 
-                pow(drn,2) < pow(_directional_cutoff,2)  ) 
+            if(      dr*dr < pow(_molecular_cutoff,2) && // mol within cutoff
+                pow(drn,2) < pow(_directional_cutoff,2)  ) // proj within cutoff
             {
                 top->NBList().Add(*seg_it1, *seg_it2);
-                stopLoop = true;
-                // counter_match++; // num of matches
+               // counter_match++; // num of matches
             }                
 
         } /* exit loop seg_it2 */
