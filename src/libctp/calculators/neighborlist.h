@@ -50,13 +50,16 @@ public:
     void GenerateFromFile(Topology *top, string filename);
 
 private:
-
+    
+    void generic_cutoff_seg_based_pair_list(Topology *top);
+    
     map< string, map<string,double> > _cutoffs;
     bool                              _useConstantCutoff;
     double                            _constantCutoff;
     string                            _generate_from;
     bool                              _generate_from_file;
     bool                              _generate_unsafe;
+    bool                              _do_molecular_cutoff;
     
     std::list<QMNBList::SuperExchangeType*>        _superexchange;
 
@@ -115,6 +118,12 @@ void Neighborlist::Initialize(Property *options) {
     else {
         _generate_unsafe = false;
     }
+    if (options->exists(key+".do_molecular_cutoff")) {
+        _do_molecular_cutoff = true;
+    }
+    else {
+        _do_molecular_cutoff = false;
+    }
     
     // if superexchange is given
     if (options->exists(key + ".superexchange")) {
@@ -134,7 +143,17 @@ bool Neighborlist::EvaluateFrame(Topology *top) {
 
     top->NBList().Cleanup();
 
-    if (_generate_from_file) {        
+    if (_do_molecular_cutoff) {
+        
+        cout << "\n\n\t DANGER! DANGER! \n\n";
+        cout << "    \t WE HACKED OURSELVES!   \n";
+        cout << "    \t UNDOCUMENTED FEATURE!   \n";
+        cout << "    \t uiiiiiiiiiiii !!! A  \n";
+        
+        generic_cutoff_seg_based_pair_list(top);
+        
+    }    
+    else if (_generate_from_file) {        
         this->GenerateFromFile(top, _generate_from);        
     }
     
@@ -327,6 +346,44 @@ void Neighborlist::GenerateFromFile(Topology *top, string filename) {
     
 }
 
+
+void Neighborlist::generic_cutoff_seg_based_pair_list(Topology *top){
+
+        double cutoff(_constantCutoff);
+        vector< Segment* > ::iterator seg_it1, seg_it2;
+        vec r1,r2;
+        bool stopLoop = false;
+        int counter=0;
+        int counter_match=0;
+        
+        for (seg_it1 = top->Segments().begin();
+                seg_it1 < top->Segments().end();
+                seg_it1 ++) {
+
+            for (seg_it2 = seg_it1 + 1; // upper triangular search
+                    seg_it2 < top->Segments().end();
+                    seg_it2++) {
+                
+//                counter++;
+                        
+                r1 = (*seg_it1)->getPos();
+                r2 = (*seg_it2)->getPos();
+                
+                if( abs( top->PbShortestConnect(r1, r2) ) > cutoff ) {
+                    continue;
+                }
+                else {
+                    top->NBList().Add(*seg_it1, *seg_it2);
+                    stopLoop = true;
+//                    counter_match++;
+                }                
+
+            } /* exit loop seg_it2 */
+        } /* exit loop seg_it1 */
+        
+//        cout << "Total counts: " << counter << endl;
+//        cout << "MAtched counts: " << counter_match << endl;
+} /* END of generic_cutoff_seg_based_pair_list */
 
 
 }}
