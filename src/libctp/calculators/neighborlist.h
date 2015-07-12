@@ -24,10 +24,11 @@
 #include <votca/tools/globals.h>
 #include <votca/ctp/qmcalculator.h>
 #include <votca/ctp/qmpair.h>
+#include <cmath>
 
 
 namespace votca { namespace ctp {
-
+    
 namespace TOOLS = votca::tools;
     
 class Neighborlist : public QMCalculator
@@ -51,7 +52,7 @@ public:
 
 private:
     
-    void generic_cutoff_seg_based_pair_list(Topology *top);
+    void generic_cutoff_seg_based_pair_list_in_direction(Topology *top);
     
     map< string, map<string,double> > _cutoffs;
     bool                              _useConstantCutoff;
@@ -60,7 +61,9 @@ private:
     bool                              _generate_from_file;
     bool                              _generate_unsafe;
     bool                              _do_molecular_cutoff;
-    
+    double                            _molecular_cutoff;
+    double                            _directional_cutoff;
+    vec                               _direction;
     std::list<QMNBList::SuperExchangeType*>        _superexchange;
 
 };
@@ -120,6 +123,17 @@ void Neighborlist::Initialize(Property *options) {
     }
     if (options->exists(key+".do_molecular_cutoff")) {
         _do_molecular_cutoff = true;
+        
+        string subkey = key+".do_molecular_cutoff";
+        string molecular_cutoff_str   = options->get(subkey+".molecular_cutoff").as< string >();
+        string directional_cutoff_str = options->get(subkey+".directional_cutoff").as< string >();
+        string direction_str          = options->get(subkey+".direction").as< string >();
+        
+        // string to numbers
+        _molecular_cutoff   = boost::lexical_cast<double>(molecular_cutoff_str);
+        _directional_cutoff = boost::lexical_cast<double>(directional_cutoff_str);
+        _direction          = vec(direction_str);
+        
     }
     else {
         _do_molecular_cutoff = false;
@@ -145,12 +159,13 @@ bool Neighborlist::EvaluateFrame(Topology *top) {
 
     if (_do_molecular_cutoff) {
         
-        cout << "\n\n\t DANGER! DANGER! \n\n";
+        cout << "\n\n\t DANGER! DANGER!      \n\n";
         cout << "    \t WE HACKED OURSELVES!   \n";
-        cout << "    \t UNDOCUMENTED FEATURE!   \n";
-        cout << "    \t uiiiiiiiiiiii !!! A  \n";
+        cout << "    \t UNDOCUMENTED FEATURE!  \n";
+        cout << "    \t uiiiiiiiiiiii !!!      \n";
+        cout << "    \t NO ERROR CHECKS !!! A  \n";
         
-        generic_cutoff_seg_based_pair_list(top);
+        this->generic_cutoff_seg_based_pair_list_in_direction(top);
         
     }    
     else if (_generate_from_file) {        
@@ -347,44 +362,45 @@ void Neighborlist::GenerateFromFile(Topology *top, string filename) {
 }
 
 
-void Neighborlist::generic_cutoff_seg_based_pair_list(Topology *top){
+void Neighborlist::generic_cutoff_seg_based_pair_list_in_direction(Topology *top)
+{
+    vec n = _direction.normalize(); // uniform filter
+    
+    bool stopLoop = false;
+    int counter(0), counter_match(0);
+    vec r1,r2,dr;
+    double drn;
 
-        double cutoff(_constantCutoff);
-        vector< Segment* > ::iterator seg_it1, seg_it2;
-        vec r1,r2;
-        bool stopLoop = false;
-        int counter=0;
-        int counter_match=0;
-        
-        for (seg_it1 = top->Segments().begin();
-                seg_it1 < top->Segments().end();
-                seg_it1 ++) {
+    vector< Segment* > ::iterator seg_it1, seg_it2;
+    for (seg_it1 = top->Segments().begin();
+            seg_it1 < top->Segments().end();
+            seg_it1 ++) {
 
-            for (seg_it2 = seg_it1 + 1; // upper triangular search
-                    seg_it2 < top->Segments().end();
-                    seg_it2++) {
-                
-//                counter++;
-                        
-                r1 = (*seg_it1)->getPos();
-                r2 = (*seg_it2)->getPos();
-                
-                if( abs( top->PbShortestConnect(r1, r2) ) > cutoff ) {
-                    continue;
-                }
-                else {
-                    top->NBList().Add(*seg_it1, *seg_it2);
-                    stopLoop = true;
-//                    counter_match++;
-                }                
+        for (seg_it2 = seg_it1 + 1; // upper triangular search
+                seg_it2 < top->Segments().end();
+                seg_it2++) {
 
-            } /* exit loop seg_it2 */
-        } /* exit loop seg_it1 */
-        
-//        cout << "Total counts: " << counter << endl;
-//        cout << "MAtched counts: " << counter_match << endl;
-} /* END of generic_cutoff_seg_based_pair_list */
+            // counter++; // total num of iterations
+            r1 = (*seg_it1)->getPos();
+            r2 = (*seg_it2)->getPos();
+            
+            dr = top->PbShortestConnect(r1, r2); // shortest via pbc
+            drn = dr*n;
+            
+            if(      dr*dr < pow(_molecular_cutoff,2) && 
+                pow(drn,2) < pow(_directional_cutoff,2)  ) 
+            {
+                top->NBList().Add(*seg_it1, *seg_it2);
+                stopLoop = true;
+                // counter_match++; // num of matches
+            }                
 
+        } /* exit loop seg_it2 */
+    } /* exit loop seg_it1 */
+
+    // cout << "Total counts: " << counter << endl;
+    // cout << "MAtched counts: " << counter_match << endl;
+}
 
 }}
 
