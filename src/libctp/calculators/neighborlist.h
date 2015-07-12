@@ -163,7 +163,9 @@ bool Neighborlist::EvaluateFrame(Topology *top) {
         cout << "    \t WE HACKED OURSELVES!   \n";
         cout << "    \t UNDOCUMENTED FEATURE!  \n";
         cout << "    \t uiiiiiiiiiiii !!!      \n";
-        cout << "    \t NO ERROR CHECKS !!! A  \n";
+        cout << "    \t NO ERROR CHECKS !!!    \n";
+        cout << "    \t Aaaa!!! Panic, panic \n\n";
+        cout << "    \t by A                   \n";
         
         this->generic_cutoff_seg_based_pair_list_in_direction(top);
         
@@ -400,6 +402,8 @@ void Neighborlist::generic_cutoff_seg_based_pair_list_in_direction(Topology *top
 
     // cout << "Total counts: " << counter << endl;
     // cout << "MAtched counts: " << counter_match << endl;
+
+    // note: pdb-pair-per-frame output would be nice for a fast visual check
 }
 
 }}
