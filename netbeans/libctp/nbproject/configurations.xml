@@ -713,8 +713,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../src/libctp/mbgft/mbgft.cc" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="../../src/libctp/molecule.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../src/libctp/molpolengine.cc" ex="false" tool="1" flavor2="0">
@@ -1358,8 +1356,6 @@
             ex="false"
             tool="3"
             flavor2="0">
-      </item>
-      <item path="../../src/libctp/mbgft/mbgft.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../src/libctp/molecule.cc" ex="false" tool="1" flavor2="0">
       </item>
