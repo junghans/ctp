@@ -20,16 +20,16 @@
 #include <votca/ctp/trajio.h>
 #include <votca/ctp/trajiofactory.h>
 #include "trajio/pdb.h"
-#include "trajio/xyz.h"
 #include "trajio/gro.h"
+#include "trajio/xyz.h"
 
 namespace votca { namespace ctp {
 
 void trajIOFactory::RegisterAll(void)
 {
     trajIOs().Register<pdbTrajIO> ("pdb");
-    trajIOs().Register<xyzTrajIO> ("xyz");
     trajIOs().Register<groTrajIO> ("gro");
+    trajIOs().Register<xyzTrajIO> ("xyz");
 }
 
 } /*namespace votca END */ } /* namespace ctp END */

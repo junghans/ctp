@@ -21,12 +21,13 @@
 #define VOTCA_CTP_XYZ_TRAJ_IO_H
 
 #include <votca/ctp/trajio.h>
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string.hpp> 
+#include <boost/format.hpp>
 
 namespace votca { namespace ctp {
-    namespace ba = boost::algorithm;
+
 //      Note:
-// XYZ is in   : Angstrom
+// <xyz> is in : Angstrom
 // VOTCA is in : nm
 // conversion factor ( x 0.1 )
     
@@ -35,145 +36,177 @@ class xyzTrajIO: public trajIO
 public:
     xyzTrajIO(){}
     ~xyzTrajIO(){}
-    void read(std::string,Topology*);
-    void write();
-    void error1(string line){ cout << endl; throw runtime_error(line); }
+    void read( const std::string&,Topology*);
+    void write(const std::string&,Topology*);
 private:
-    
+    void Erorr_message(string line){ // formatted and visible error message
+        cout<<"\n\n"; throw runtime_error(line+'\n');
+    }
+
 };
 
-void xyzTrajIO::read(std::string _filename, Topology* _topPtr)
+void xyzTrajIO::read(const std::string& _filename, Topology * _top)
 {
-// set molecule >> segment >> fragment
-// reconnect them all
+    cout << flush;
+    cout << "... ... Reading structure file <xyz>" << endl;
+    
+    // set molecule >> segment >> fragment
+    // reconnect them all
 
-// molecule    
-    Molecule * _molPtr = 0;
-    // direct
-    _molPtr = _topPtr->AddMolecule("M1");
-                // inverse
-                _molPtr->setTopology(_topPtr);
-// segment    
-    Segment  * _segPtr  = 0;
-    // direct
-    _segPtr = _topPtr->AddSegment("S1");
-               _molPtr->AddSegment(_segPtr);
+    // molecule    
+    Molecule * _mol = _top->AddMolecule("mol_0");
                // inverse
-                _segPtr->setTopology(_topPtr);
-                _segPtr->setMolecule(_molPtr);
-
-// i dont create Fragment here
-// because xyz has no residues
-// they will be set for mapping further
-                
-//    Fragment * _fragPtr = 0;
-//    // direct
-//    _fragPtr = _topPtr->AddFragment("F1");
-//               _molPtr->AddFragment(_fragPtr);
-//               _segPtr->AddFragment(_fragPtr);
-//                // inverse
-//              _fragPtr->setTopology(_topPtr);
-//              _fragPtr->setMolecule(_molPtr);
-//              _fragPtr->setSegment(_segPtr);
+               _mol->setTopology(_top);
     
-// try to read xyz file
+    // segment    
+    Segment  * _seg  = _top->AddSegment("seg_0");
+                       _mol->AddSegment(_seg);
+               // inverse
+               _seg->setTopology(_top);
+               _seg->setMolecule(_mol);
+    
+               // fragment
+    Fragment * _fra  = _top->AddFragment("fra_0");
+                       _mol->AddFragment(_fra);
+                       _seg->AddFragment(_fra);
+               // inverse
+               _fra->setTopology(_top);
+               _fra->setMolecule(_mol);
+               _fra->setSegment(_seg );
+    
+               
+    // try to read <xyz> file
     std::ifstream _file( _filename.c_str());
-    if (_file.fail()) {
-        error1( "... ... Can not open: " + _filename + "\n"
-                "... ... Does it exist? Is it correct file name?\n");
-    }
-    else{
-        cout << endl << 
-                ("... ... File opened: " + _filename );
-    }
+    if (_file.fail())
+        Erorr_message(  "... ... Can't open: " + _filename + "\n"
+                        "... ... Does it exist?               \n"   
+                        "... ... Is it correct file name?     \n");
+    else
+        cout << "... ... From: " << _filename << endl;
     
-// read XYZ line by line
+    
+    // read <xyz> line by line
     string _line;
     
-// XYZ: first two lines are tech specs
-// XYZ check: if first line can cast to int, then ok
+    // <xyz>: first two lines are tech specs
     try
     {   
-        // first line, number of atoms in XYZ
+        // first line, number of atoms in <xyz>
+        // check if converts to int
         std::getline(_file, _line,'\n');
-        ba::trim(_line);
-        int numXYZatoms = boost::lexical_cast<double>(_line);
+        boost::algorithm::trim(_line);
+        int natoms = boost::lexical_cast<double>(_line);
     }
     catch(boost::bad_lexical_cast &)
     {
-        error1( "... ... Bad XYZ file format!\n"
-                "... ... Can't find number of atoms in first line\n"
-                "... ... First line: total number of atoms\n"
-                "... ... Second line: comments\n"
-                "... ... The line is: \n\n"
-                "" + _line + "\n\n");
+        Erorr_message(  "... ... Bad <xyz> file format!            \n"
+                        "... ... First line : total number of atoms\n"
+                        "... ... Second line: comment line         \n"
+                        "... ... Broken line looks like this:      \n\n"
+                        "" + _line );
     }
     
-    // ignore second line, it's a comment
+    // sample of the <xyz> line
+    std::string xyz_sample = " X   -1.000   -1.000   -1.000 \n";
+    
+    // second line, comment line, ignore
     std::getline(_file, _line,'\n');
     
     while ( std::getline(_file, _line,'\n') ){
 
         // tokenize wrt space (free format)
-        Tokenizer tokLine( _line, " ");
-        vector<string> vecLine;
-        tokLine.ToVector(vecLine);
+        Tokenizer xyztok( _line, " ");
+        vector<string> xyzline;
+        xyztok.ToVector(xyzline);
         
-        if (vecLine.size()!=4){
-            error1("... ... Bad coord line in XYZ. Fix your XYZ file!\n"
-                         "... ... I don't like this string: \n\n"
-                         "" + _line + "\n\n"
-                         "... ... Check if coords are numbers!\n");
-        }
+        if (xyzline.size()!=4)
+            Erorr_message("... ... Bad <xyz> file format!       \n"
+                          "... ... Format sample:               \n\n"
+                          "" + xyz_sample +                    "\n"
+                          "... ... Broken line looks like this: \n\n"
+                          "" + _line );
         
-        string _atName     (vecLine[0]); // str,  Atom name
-        string _x          (vecLine[1]); // 
-        string _y          (vecLine[2]); // 
-        string _z          (vecLine[3]); // 
+        string _atName     (xyzline[0]); // str,  Atom name
+        string _x          (xyzline[1]); // 
+        string _y          (xyzline[2]); // 
+        string _z          (xyzline[3]); // 
         
-        // try transform xyz coords to double
+        // try to convert <xyz> coords to double
         double _xd(0),_yd(0),_zd(0);
         try{
             _xd = boost::lexical_cast<double>(_x);
             _yd = boost::lexical_cast<double>(_y);
             _zd = boost::lexical_cast<double>(_z);
         }
-        catch(boost::bad_lexical_cast &)
-        {
-                 error1( "... ... Can't make numbers from strings.\n"
-                         "... ... I don't like this string: \n\n"
-                         "" + _line + "\n\n"
-                         "... ... Check if coords are numbers!\n");
-        }
-        // conversion!
-        vec r(_xd , _yd , _zd); // in Angstroms
-        r = r * 0.1;            // in nanometers
+        catch(boost::bad_lexical_cast &){
+            Erorr_message("... ... Bad <xyz> file format!       \n"
+                          "... ... Can't convert <xyz> string to numbers! \n"
+                          "... ... Format sample:               \n\n"
+                          "" + xyz_sample +                    "\n"
+                          "... ... Broken line looks like this: \n\n"
+                          "" + _line ); }
+        
+        // convert Angstroms <xyz> to nm Votca/GROMACS
+        vec r(_xd , _yd , _zd); // was in Angstroms
+        r = r * 0.1;            // now in nanometers
         
         // set atom
         // reconnect to topology, molecule, segment, fragment
-        Atom * _atmPtr = 0;
-        // direct
-        _atmPtr = _topPtr->AddAtom(_atName);
-                _molPtr->AddAtom(_atmPtr);
-                 _segPtr->AddAtom(_atmPtr);
-//                _fragPtr->AddAtom(_atmPtr);
-                    // inverse
-                    _atmPtr->setTopology(_topPtr);
-                    _atmPtr->setMolecule(_molPtr);        
-                    _atmPtr->setSegment(_segPtr);
-//                    _atmPtr->setFragment(_fragPtr);
+        Atom * _atom  = _top->AddAtom(_atName);
+                        _mol->AddAtom(_atom);
+                        _seg->AddAtom(_atom);
+                        _fra->AddAtom(_atom);
+                // inverse
+                _atom->setTopology(_top);
+                _atom->setMolecule(_mol);        
+                _atom->setSegment( _seg);
+                _atom->setFragment(_fra);
         
         // set atom name, position
-        _atmPtr->setElement(_atName);
-        _atmPtr->setPos(r);
-    }
-
+        _atom->setElement(_atName);
+        _atom->setPos(r);
+        
+    } /* END of while loop */
+    
+    
+    _file.close();
+    
     return;
 }
 
-void xyzTrajIO::write()
+void xyzTrajIO::write(const std::string& _filename, Topology * _top)
 {
-    std::cout << std::endl << "\n... ... I write PDB file";
+    using boost::format;
+    
+    // stream to write on
+    std::stringstream ss;
+    
+    // first line, atom number
+    ss << boost::format("%1%\n") % _top->Atoms().size();
+    
+    // second line, random comment
+    ss << "comment line\n";
+    
+    // molecule structure
+    // openbabel <xyz> format: E X Y Z
+    vector<Atom*>::iterator ita;
+    for ( ita = _top->Atoms().begin(); ita != _top->Atoms().end(); ++ita ){
+        
+        format frmt("%|3|%|+10.5f|%|+10.5f|%|+10.5f|\n");
+        frmt % (*ita)->getElement();
+        frmt % float( (*ita)->getPos().getX() * 10. );
+        frmt % float( (*ita)->getPos().getY() * 10. );
+        frmt % float( (*ita)->getPos().getZ() * 10. );
+        ss << frmt;
+    }
+    
+    // write to file in <xyz> format
+    // open, dump to file and close
+    std::ofstream _file( _filename.c_str());
+    _file << ss.rdbuf();
+    _file.close();
+    
+    return ;    
 }
 
 } /*namespace votca END */ } /* namespace ctp END */

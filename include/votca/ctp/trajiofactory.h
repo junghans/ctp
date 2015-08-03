@@ -31,7 +31,6 @@ private:
     trajIOFactory(){}
 public:
     static void RegisterAll(void);
-    
     friend trajIOFactory &trajIOs();
 };
 

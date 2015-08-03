@@ -8,12 +8,21 @@
 #include <boost/algorithm/string.hpp>
 #include <votca/tools/vec.h>
 #include <boost/format.hpp>
+#include <algorithm>
 
 #include <votca/ctp/trajiofactory.h>
 
 namespace votca { namespace ctp {
     namespace ba = boost::algorithm;
 //    using namespace std;
+
+class map_vec
+{
+public:
+    std::vector<std::string*> v;
+};
+
+
     
 class PDB2Map : public QMTool
 {
@@ -24,22 +33,16 @@ public:
    
     string Identify() { return "pdb2map"; }
     
-// reads options    
+    // reads options    
     void   Initialize(Property *options);
     
-// makes xml
+    // makes xml
     bool   Evaluate();
     
-// main functions
+    // main functions
     void topMdQm2xml();   // generate XML from two above
     void adaptQM2MD();    // make QM and MD compatible
-    void isConvertable(); // can PDB be used as QM ?
-// secondary functions    
-    void fileExtension(string &, const string &); // return file extension
-    void setPeriodicTable(); // fill periodic table -> elemNumber:mass
     
-// nice error function    
-    void error1(string line){cout<<"\n\n"; throw runtime_error(line+'\n');}
     
 private:
 
@@ -47,79 +50,132 @@ private:
     string      _input_qm_file;
     string      _output_file;
     
-    bool        _conversion_possible;
-    
     Topology    _MDtop;
     Topology    _QMtop;
 
-   // element:mass map
+    // element:mass map
     map <string,int> el2mass;
+
+    // internal methods
+    void fileExtension(const string & name, string & ext){ 
+        // return file extension
+        votca::tools::Tokenizer tok(name,".");
+        vector<string> factor;
+        tok.ToVector(factor);
+        ext = factor.back();
+        return ; 
+    }
+    void setPeriodicTable(); // fill periodic table -> elemNumber:mass
+    void Erorr_message(string line){ // formatted and visible error message
+        cout<<"\n\n"; throw runtime_error(line+'\n');
+    }
+    
+    template<class T>
+    bool hasElement(vector<T>& v, T x){
+        return std::find(v.begin(), v.end(), x) != v.end();
+    }
+    
+    // formats top to <mdatoms> :               requires res
+    std::string atom2map_md(Atom&);    
+    // formats top to <qmatoms> and <mpoles> :  requires element
+    std::string atom2map_qm(Atom&);    
+    
+    bool ifResChanged(Atom& a1){
+        // checks if residue has chaged
+        bool outcome = false;
+        
+        if (a1.getId() == 1)
+            // first, change by default
+            outcome = true;
+        else
+        {
+          if ( a1.getFragment()->getName() !=
+            a1.getTopology()->getAtom( a1.getId()-1 )->getFragment()->getName())
+              // if previous is not the same, it changed
+              outcome = true;
+        }
+        
+        return outcome;
+    }
 
 };
 
 void PDB2Map::Initialize(Property* options) 
 {   
-//// register trajIOs
-//    trajIOFactory::RegisterAll();
-//    
-//// can convert from MD to QM, if QM is not found
-//    _conversion_possible = false;
-//    
-//// read options    
-//    string key = "options.pdb2map.";
-//    
-//// md file
-//    if ( options->exists(key+"md") ){
-//        _input_md_file      = options->get(key+"md").as<string> ();
-//        cout << endl << "... ... MD input: \t" << _input_md_file;
-//    }
-//    else{
-//        error1("... ... <MD> option error.");
-//    }
-//    
-//// qm file
-//    if ( options->exists(key+"qm") ){
-//        _input_qm_file      = options->get(key+"qm").as<string> ();
-//        cout << endl << "... ... QM input: \t" << _input_qm_file;
-//    }
-//    else{
-//        string extension;
-//        fileExtension(extension,_input_md_file);
-//        
-//        if (extension == "pdb"){
-//         _input_qm_file = _input_md_file;
-//         _conversion_possible = true;
-//         cout << endl << "... ... QM input is not given. "
-//              << endl << "... ... Try conversion from MD."
-//              << endl << "... ... QM input (same as MD): \t" << _input_qm_file;
-//        }
-//        else{
-//            error1("... ... <QM> option error. Can convert only PDB.");
-//        }
-//    }
-//
-//// output xml file
-//    if ( options->exists(key+"output") ){
-//        _output_file      = options->get(key+"output").as<string> ();
-//        cout << endl << "... ... Output: \t" << _output_file;
-//    }
-//    else{
-//        _output_file = "system_output.xml";
-//        cout << endl << "... ... Output by default: \t" << _output_file;
-//    }   
+    // skip init
+    cout << endl;
+
+    // read options    
+    string key = "options.pdb2map.";
+    
+    // md file
+    if ( options->exists(key+"md") )
+        _input_md_file      = options->get(key+"md").as<string> ();
+    else 
+        Erorr_message("... ... Option <md> not found; I need it.");
+    
+    // qm file
+    if ( options->exists(key+"qm") )
+        _input_qm_file      = options->get(key+"qm").as<string> ();
+    else 
+        Erorr_message("... ... Option <qm> not found; I need it.");
+    
+    // output xml file
+    if ( options->exists(key+"output") )
+        _output_file      = options->get(key+"output").as<string> ();
+    else
+        _output_file = "system_output.xml"; 
+    
+    // register all IOtraj formats
+    // currently includes: pdb, gro, xyz
+    trajIOFactory::RegisterAll();
+    
+    // show what files have been used
+    cout <<    "... ... Using the following files... "   << endl <<
+               "... ... MD input:\t"   << _input_md_file << endl <<
+               "... ... QM input:\t"   << _input_qm_file << endl <<
+               "... ... XML output:\t" << _output_file   << flush;
 }
 
 bool PDB2Map::Evaluate() {
-//    
-//    trajIO * trajPtr = 0;
-//    string extension;
-//
-//    cout << endl << "... ... MD topology";
-//    
-//    fileExtension(extension,_input_md_file);
-//    trajPtr = trajIOs().Create(extension);
-//    trajPtr->read(_input_md_file,&_MDtop);
-//    
+    
+    // skip 
+    cout << endl;
+    
+    // get extensions
+    string md_ext, qm_ext;
+    fileExtension(_input_md_file, md_ext);
+    fileExtension(_input_qm_file, qm_ext);
+    
+    // viable options for mapping
+    vector<string> _possible_md_ext;
+    _possible_md_ext.push_back("pdb");
+    _possible_md_ext.push_back("gro");
+    
+    vector<string> _possible_qm_ext;
+    _possible_qm_ext.push_back("pdb");
+    _possible_qm_ext.push_back("xyz");
+    
+    // check if in viable options before merging into map
+    if ( !hasElement<string>(_possible_md_ext, md_ext) )
+        Erorr_message("... ... Input <md> type error  \n"
+            "... ... Can't use: " + _input_md_file + "\n"
+            "... ... Options are: pdb, gro            \n");
+    if ( !hasElement<string>(_possible_qm_ext, qm_ext) )
+        Erorr_message("... ... Input <qm> type error  \n"
+            "... ... Can't use: " + _input_qm_file + "\n"
+            "... ... Options are: pdb, xyz            \n");
+    
+    // read in via trajIO factory
+    trajIO * 
+    trajio = trajIOs().Create( md_ext );
+    trajio->read(_input_md_file, &_MDtop);
+    
+    trajio = trajIOs().Create( qm_ext );
+    trajio->read(_input_qm_file, &_QMtop);
+    
+    adaptQM2MD();
+    
 //    cout << endl << "... ... QM topology";
 //    
 //    fileExtension(extension,_input_qm_file);
@@ -140,13 +196,54 @@ bool PDB2Map::Evaluate() {
 
 void PDB2Map::adaptQM2MD()
 {
+    // check if atom number is the same in QM and MD
+    int numMDatoms = _MDtop.getMolecule(1)->NumberOfAtoms();
+    int numQMatoms = _QMtop.getMolecule(1)->NumberOfAtoms();
+    
+    bool _QM2MDcompatible = (numMDatoms == numQMatoms) ? true : false;
+    
+    if (!_QM2MDcompatible)
+        Erorr_message("... ... QM and MD molecules are not the same. \n"
+                      "... ... Abort! \n");
+    
+//    int Natoms = _MDtop.Atoms().size();
+    
+//    vector<std::string> md_strings;
+//    for ( itmd = _MDtop.Atoms().begin(); itmd != _MDtop.Atoms().end(); ++itmd )
+//        md_strings.push_back( atom2map_md( *(*itmd) ) );
 //    
-//    // check if atom number is the same in QM and MD
-//    int numMDatoms = _MDtop.getMolecule(1)->NumberOfAtoms();
-//    int numQMatoms = _QMtop.getMolecule(1)->NumberOfAtoms();
-//    
-//    bool _QM2MDcompatible = (numMDatoms == numQMatoms) ? true : false;
-//    
+//    vector<std::string> qm_strings;
+//    for ( itqm = _QMtop.Atoms().begin(); itqm != _QMtop.Atoms().end(); ++itqm )
+//        qm_strings.push_back( atom2map_qm( *(*itqm) ) );
+
+    
+    for ( vector<Fragment*>::iterator 
+                itmdfra =  _MDtop.Fragments().begin();
+                itmdfra != _MDtop.Fragments().end();
+                ++itmdfra       ){
+        
+        cout << "New Fragment" << endl;
+        
+        for ( vector<Atom*>::iterator 
+                itmdat =  (*itmdfra)->Atoms().begin(); 
+                itmdat != (*itmdfra)->Atoms().end();
+                ++itmdat        ){
+        
+            cout << atom2map_md( *(*itmdat) ) << '\t';
+            
+        }
+    }
+    
+    
+    
+////        cout << atom2map_md( *(*itmd) ) << '\t' ;
+//        cout << (*itmd)->getFragment()->getName();
+////        if ( itmd != _MDtop.Atoms().begin() || (*itmd)->getFragment()->getName() != (*(itmd-1))->getFragment()->getName() ) 
+////            cout << '\n';
+//    }
+    
+    
+    
 //    // if so, proceed
 //    if (_QM2MDcompatible){
 //        Molecule * MDmolecule = _MDtop.getMolecule(1);
@@ -408,32 +505,40 @@ void PDB2Map::topMdQm2xml(){return;}
 //    return;
 //} /* END topMdQm2xml */
 
-void PDB2Map::fileExtension(string & extension, const string & filename)
-{
+//void PDB2Map::fileExtension(string & extension, const string & filename)
+//{
 //    Tokenizer tokenized_line( filename, ".");
 //    vector<string> vector_line;
 //    tokenized_line.ToVector(vector_line);
 //    extension = vector_line.back();
 //} /* END fileExtension */
-//
-//void PDB2Map::setPeriodicTable()
-//{
-//    // fill in periodic table
-//    el2mass["H"]        = 1;
-//    el2mass["B"]        = 10;
-//    el2mass["C"]        = 12;
-//    el2mass["N"]        = 14;
-//    el2mass["O"]        = 16;
-//    el2mass["F"]        = 19;
-//    el2mass["Al"]       = 27;
-//    el2mass["Si"]       = 28;
-//    el2mass["P"]        = 31;
-//    el2mass["S"]        = 32;
-//    el2mass["Cl"]       = 35;
-//    el2mass["Ir"]       = 192;
-//    return;
-//} /* END setPeriodicTable */
-//
+
+void PDB2Map::setPeriodicTable()
+{
+    // fill in periodic table
+    el2mass["H"]        = 1;
+    el2mass["B"]        = 10;
+    el2mass["C"]        = 12;
+    el2mass["N"]        = 14;
+    el2mass["O"]        = 16;
+    el2mass["F"]        = 19;
+    el2mass["Al"]       = 27;
+    el2mass["Si"]       = 28;
+    el2mass["P"]        = 31;
+    el2mass["S"]        = 32;
+    el2mass["Cl"]       = 35;
+
+    el2mass["Ga"]       = 70;
+    el2mass["Ge"]       = 73;
+    el2mass["As"]       = 75;
+    el2mass["Se"]       = 79;
+    el2mass["Br"]       = 80;
+
+    el2mass["Ir"]       = 192;
+
+    return;
+} /* END setPeriodicTable */
+
 //void PDB2Map::isConvertable()
 //{
 //    string element;
@@ -448,8 +553,31 @@ void PDB2Map::fileExtension(string & extension, const string & filename)
 //                   "... ... Add chemical elements or make it XYZ.");
 //    }
 //    cout << "\n... ... PDB can be converted. Continue.";
-    return;
-} /* END isConvertable */
+//    return;
+//} /* END isConvertable */
+
+std::string PDB2Map::atom2map_md(Atom& atom){
+    // builds blocks for <mdatoms>
+    std::stringstream ss;
+    std::string res_id, res_name, atom_name;
+    
+    Tokenizer tok( atom.getFragment()->getName(), "_"); // res: name_id
+    vector<std::string> v;
+    tok.ToVector(v);
+    
+    res_id    = v.back();  // res id
+    res_name  = v.front(); // res name
+    
+    ss << res_id << ":" << res_name << ":" << atom.getName();
+    return ss.str();
+}
+
+std::string PDB2Map::atom2map_qm(Atom& atom){
+    // builds blocks for <qmatom>
+    std::stringstream ss;
+    ss << atom.getId() << ":" << atom.getElement();
+    return ss.str();
+}
 
 } /* END namespace ctp */ } /* END namespace votca */
 

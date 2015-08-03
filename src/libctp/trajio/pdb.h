@@ -22,6 +22,7 @@
 
 #include <votca/ctp/trajio.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
 
 namespace votca { namespace ctp {
     namespace ba = boost::algorithm;
@@ -35,56 +36,63 @@ class pdbTrajIO: public trajIO
 public:
     pdbTrajIO(){}
     ~pdbTrajIO(){}
-    void read(std::string,Topology*);
-    void write();
-    void error1(string line){ cout << endl; throw runtime_error(line); }
+    void read( const std::string&,Topology*);
+    void write(const std::string&,Topology*);
 private:
-    
+    void Erorr_message(string line){ // formatted and visible error message
+        cout<<"\n\n"; throw runtime_error(line+'\n');
+    }
 };
 
-void pdbTrajIO::read(std::string _filename, Topology* _topPtr)
+void pdbTrajIO::read(const std::string& _filename, Topology* _top)
 {
-// set molecule >> segment >> fragment
-// reconnect them all
+    cout << flush;
+    cout << "... ... Reading structure file <pdb>" << endl;
     
-// molecule
-    Molecule * _molPtr = 0;
-    // direct
-    _molPtr = _topPtr->AddMolecule("M1");
-              // inverse
-              _molPtr->setTopology(_topPtr);
-    
-// segment
-    Segment  * _segPtr  = 0;
-    // direct
-    _segPtr = _topPtr->AddSegment("S1");
-              _molPtr->AddSegment(_segPtr);
-              // inverse
-              _segPtr->setTopology(_topPtr);
-              _segPtr->setMolecule(_molPtr);
+    // set molecule >> segment >> fragment
+    // reconnect them all
 
-// try to read PDB file
+    // molecule    
+    Molecule * _mol = _top->AddMolecule("mol_0");
+               // inverse
+               _mol->setTopology(_top);
+    
+    // segment    
+    Segment  * _seg  = _top->AddSegment("seg_0");
+                       _mol->AddSegment(_seg);
+               // inverse
+               _seg->setTopology(_top);
+               _seg->setMolecule(_mol);
+    
+    // fragment, to be set up later
+    Fragment * _fra = 0;
+    
+
+    // try to read <pdb> file
     std::ifstream _file( _filename.c_str());
-    if (_file.fail()) {
-        error1( "... ... Can not open: " + _filename + "\n"
-                "... ... Does it exist? Is it correct file name?\n");
-    }
-    else{
-        cout << endl << 
-                ("... ... File opened: " + _filename );
-    }
-
-// read PDB line by line
-    string _line;
+    if (_file.fail())
+        Erorr_message(  "... ... Can't open: " + _filename + "\n"
+                        "... ... Does it exist?               \n"   
+                        "... ... Is it correct file name?     \n");
+    else
+        cout << "... ... From: " << _filename << endl;
     
-// counters for loops
-    int _newResNum = 0;
-//    bool warning_showed = false;
-
-    while ( std::getline(_file, _line,'\n') ){
+    std::string pdb_sample;
+    pdb_sample = "ATOM     34  CA AARG A  -3      12.353  85.696  94.456  0.50 36.67           C  \n";
+    
+    // read <pdb> lines
+    std::string _line;
+    while ( std::getline(_file, _line,'\n') )
         if(     boost::find_first(_line, "ATOM"  )   || 
                 boost::find_first(_line, "HETATM")      
                 ){
+            
+            if ( _line.size() < 80 )
+            {
+                // if PDB string is truncated, restore
+                ba::trim(_line);
+                _line += std::string( 80-_line.size(), ' ');
+            }
             
             //      according to PDB format
             string _recType    (_line,( 1-1),6); // str,  "ATOM", "HETATM"
@@ -133,66 +141,121 @@ void pdbTrajIO::read(std::string _filename, Topology* _topPtr)
             }
             catch(boost::bad_lexical_cast &)
             {
-                error1( "... ... Can not convert PDB coord line!\n"
-                        "... ... Error at atom index: " + _atNum + "\n"
-                        "... ... Make sure this line is PDB correct\n");
+                Erorr_message("... ... Bad <pdb> file format!       \n"
+                              "... ... Can't convert <gro> string to numbers! \n"
+                              "... ... Format sample:               \n\n"
+                              "" + pdb_sample +                    "\n"
+                              "... ... Broken line looks like this: \n\n"
+                              "" + _line );
             }
             
-            // conversion!
-            vec r(_xd , _yd , _zd); // in Angstroms
-            r = r * 0.1;            // now nm
+            vec r(_xd , _yd , _zd);
+            r = r * 0.1 ; // angstrom to nm 
+            
+            string _newFragName = _resName+'_'+_resNum;
 
-            // set fragment
-            // reconnect to topology, molecule, segment
-            Fragment * _fragPtr = 0;
-            // make new frag for new res number
-            // otherwise use last created
-            if ( _newResNum != _resNumInt ){
-
-                _newResNum = _resNumInt;
-                string _newResName = _resName+'_'+_resNum;
-                
-                // direct
-                _fragPtr = _topPtr->AddFragment(_newResName);
-                           _molPtr->AddFragment(_fragPtr);
-                           _segPtr->AddFragment(_fragPtr);
+            if (_top->Fragments().empty()){
+                // if empty, create first fragment
+                _fra =  _top->AddFragment(_newFragName);
+                        _mol->AddFragment(_fra);
+                        _seg->AddFragment(_fra);
                           // inverse
-                          _fragPtr->setTopology(_topPtr);
-                          _fragPtr->setMolecule(_molPtr);
-                          _fragPtr->setSegment(_segPtr);        
+                          _fra->setTopology(_top);
+                          _fra->setMolecule(_mol);
+                          _fra->setSegment(_seg);   
             }
-            else{
-                _fragPtr = _topPtr->Fragments().back();
+            else if (_top->Fragments().back()->getName() != _newFragName){
+                // if name does not match, create new fragment
+                _fra =  _top->AddFragment(_newFragName);
+                        _mol->AddFragment(_fra);
+                        _seg->AddFragment(_fra);
+                          // inverse
+                          _fra->setTopology(_top);
+                          _fra->setMolecule(_mol);
+                          _fra->setSegment(_seg);   
             }
-            if (_fragPtr==0) {error1("Zero pointer in GRO reader. Why?");}
-                        
-            // set atom
-            // reconnect to topology, molecule, segment, fragment
-            Atom * _atmPtr = 0;
-            // direct
-            _atmPtr = _topPtr->AddAtom(_atName);
-                      _molPtr->AddAtom(_atmPtr);
-                      _segPtr->AddAtom(_atmPtr);
-                     _fragPtr->AddAtom(_atmPtr);
+            
+            Atom * _atom  = _top->AddAtom(_atName);
+                            _mol->AddAtom(_atom);
+                            _seg->AddAtom(_atom);
+                            _fra->AddAtom(_atom);
                       // inverse
-                      _atmPtr->setTopology(_topPtr);
-                      _atmPtr->setMolecule(_molPtr);        
-                      _atmPtr->setSegment(_segPtr);
-                      _atmPtr->setFragment(_fragPtr);
-                      
-            _atmPtr->setResnr        (_resNumInt);
-            _atmPtr->setResname      (_resName);
-            _atmPtr->setPos          (r);
-            _atmPtr->setElement      (_atElement);
-        }
-    }    
+                      _atom->setTopology(_top);
+                      _atom->setMolecule(_mol);        
+                      _atom->setSegment( _seg);
+                      _atom->setFragment(_fra);
+
+            _atom->setResnr        (_resNumInt);
+            _atom->setResname      (_resName);
+            _atom->setPos          (r);
+            _atom->setElement      (_atElement);
+            
+    } /*  END of while loop */    
+    
+    
+    _file.close();
     
     return;
 }
 
-void pdbTrajIO::write()
+void pdbTrajIO::write(const std::string& _filename, Topology * _top)
 {
-    std::cout << std::endl << "\n... ... I write PDB file";
+    using boost::format;
+    
+    // stream to write on
+    std::stringstream ss;
+    
+    // first line, comment
+    ss << "TITLE     PDB file::Generated by VOTCA-CTP \n";
+    
+    // second line, MODEL modifier
+    ss << boost::format("%|-6|    %|4|\n") % "MODEL" % 1;
+    
+    // molecule structure
+    // GROMACS <PDB> format
+    vector<Atom*>::iterator ita;
+    for ( ita = _top->Atoms().begin(); ita != _top->Atoms().end(); ++ita ){
+        
+        int         res_id   = (*ita)->getFragment()->getId();
+        std::string res_name = *(Tokenizer((*ita)->getFragment()->getName(), "_").begin());
+        std::string at_name  = (*ita)->getName();
+        int         at_id    = (*ita)->getId();
+        
+        format frmt("%|-6|%|5| %|-4|%|1|%|3| %|1|%|4|%|1|   %|8.3f|%|8.3f|%|8.3f|%|6.2f|%|6.2f|          %|2|%|2|\n");
+        // marker
+        frmt % "ATOM";
+        // atom data
+        frmt % at_id;
+        frmt % at_name;
+        frmt % " "; // alternate location indicator 	
+        // res data 
+        frmt % res_name;
+        frmt % " "; // chain identifier
+        frmt % res_id;
+        frmt % " "; // code for insertion of residues
+        // positions
+        frmt % float( (*ita)->getPos().getX() * 10. );
+        frmt % float( (*ita)->getPos().getY() * 10. );
+        frmt % float( (*ita)->getPos().getZ() * 10. );
+        // occupancy + temperature factor 
+        frmt % 1.0; // occupancy
+        frmt % 0.0; // temperature factor
+        frmt % (*ita)->getElement(); // element symbol
+        frmt % " "; // charge on the atom
+
+        ss << frmt;
+    }
+    
+    // final line, box dims
+    ss << "TER\nENDMDL\n";
+    
+    // write to file in <gro> format
+    // open, dump to file and close
+    std::ofstream _file( _filename.c_str());
+    _file << ss.rdbuf();
+    _file.close();
+    
+    return ;    
 }
 
 } /*namespace votca END */ } /* namespace ctp END */

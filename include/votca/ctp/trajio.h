@@ -30,8 +30,8 @@ class trajIO
 public:
     trajIO(){}
     virtual ~trajIO(){}
-    virtual void read (std::string,Topology*) = 0;
-    virtual void write() = 0;
+    virtual void read (const std::string&,Topology*) = 0;
+    virtual void write(const std::string&,Topology*) = 0;
 private:
     
 };
