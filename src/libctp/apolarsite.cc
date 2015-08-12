@@ -945,6 +945,7 @@ map<string,double> POLAR_TABLE() {
     polar_table["Si"] = 3.962e-3;   // B3LYP/6-311+g(2d,2p)
     polar_table["Ge"] = 3.962e-3;   // B3LYP/6-311+g(2d,2p)
     polar_table["Zn"] = 5.962e-3;   // B3LYP/6-311+g(2d,2p)
+    polar_table["X"]  = 0.0     ;   // dummmy pol atom
     return polar_table;
 }
 
